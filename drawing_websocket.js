@@ -9,9 +9,6 @@ const server = https.createServer({
 
 const wss = new WebSocket.Server({ server, path: '/draw' });
 
-let lastOffer = null;
-let lastCandidates = [];
-
 wss.on('connection', socket => {
   console.log('🔌 Client connected');
 
@@ -19,9 +16,6 @@ wss.on('connection', socket => {
   const role = wss.clients.size === 1 ? 'host' : 'joiner';
   socket.send(JSON.stringify({ type: 'role', role }));
 
-  // Replay cached offer/candidates
-  if (lastOffer) socket.send(JSON.stringify(lastOffer));
-  lastCandidates.forEach(c => socket.send(JSON.stringify(c)));
 
   socket.on('message', message => {
     let data;
@@ -34,13 +28,6 @@ wss.on('connection', socket => {
 
     console.log('📨 Message:', data);
 
-    // Cache offer and candidates
-    if (data.type === 'offer') {
-      lastOffer = data;
-      lastCandidates = [];
-    } else if (data.type === 'candidate') {
-      lastCandidates.push(data);
-    }
 
     // Broadcast to all others
     wss.clients.forEach(client => {
@@ -54,5 +41,5 @@ wss.on('connection', socket => {
 });
 
 server.listen(3005, () => {
-  console.log('🚀 WebSocket signaling server running at wss://koppelow.com:3005/holostream');
+  console.log('🚀 WebSocket signaling server running at wss://koppelow.com:3005/draw');
 });
