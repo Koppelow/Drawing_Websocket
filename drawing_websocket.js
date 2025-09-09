@@ -15,7 +15,14 @@ wss.on('connection', socket => {
   // Assign role
   const role = wss.clients.size === 1 ? 'host' : 'joiner';
   socket.send(JSON.stringify({ type: 'role', role }));
-
+  // If a joiner connects, tell the host
+  if (role === 'joiner') {
+    wss.clients.forEach(client => {
+      if (client !== socket && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: 'joiner-ready' }));
+      }
+    });
+  }
 
   socket.on('message', message => {
     let data;
